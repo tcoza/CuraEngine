@@ -206,8 +206,18 @@ void SkirtBrim::generate()
     
     
     
-    // simplify
-    
+    // simplify paths to prevent buffer unnerruns in firmware
+    const Settings& global_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
+    const coord_t maximum_resolution = global_settings.get<coord_t>("meshfix_maximum_resolution");
+    const coord_t maximum_deviation = global_settings.get<coord_t>("meshfix_maximum_deviation");
+    for (int extruder_nr = 0; extruder_nr < extruder_count; extruder_nr++)
+    {
+        for (SkirtBrimLine& line : storage.skirt_brim[extruder_nr])
+        {
+            line.open_polylines.simplifyPolylines(maximum_resolution, maximum_deviation);
+            line.closed_polygons.simplify(maximum_resolution, maximum_deviation);
+        }
+    }
 }
 
 coord_t SkirtBrim::generateOffset(const Offset& offset, Polygons& covered_area, std::vector<Polygons>& allowed_areas_per_extruder, SkirtBrimLine& result)
